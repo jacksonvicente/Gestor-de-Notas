@@ -1,0 +1,196 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Resumo";
+}
+<div class="container page-margin">
+    <div class="row">
+        <div class="text-left">
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-primary" id="changePasswordButton">Alterar Senha</button>
+                <button class="btn btn-danger" id="logoutButton">Sair</button>
+             </div>
+        </div>
+    </div>
+</div>
+<form asp-page="Index" method="get">
+    <li class="nav-item">
+        <div class="d-flex">
+            <label for="startDate" class="mx-2 mt-2">Período:</label>
+            <input type="date" class="form-control form-control-sm mr-2" id="startDate" name="startDate" value="@Model.StartDate">
+            <label for="endDate" class="mx-2 mt-2">Até:</label>
+            <input type="date" class="form-control form-control-sm mx-2" id="endDate" name="endDate" value="@Model.EndDate">
+
+            <button type="submit" name="enviar" class="btn btn-primary btn-sm">Filtrar</button>
+        </div>
+    </li>
+</form>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+
+<style>
+    /* Estilo para os containers arredondados */
+    .rounded-container {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .loading-spinner {
+        display: none; /* Inicialmente oculto */
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    /* Estilo para adicionar margens de cabeçalho e rodapé */
+    .page-margin {
+        margin-top: 20px;
+        margin-bottom: 60px;
+    }
+
+    /* Estilo para o gráfico de pizza */
+    #semNotaChart {
+        width: 50%; /* Reduz o tamanho do gráfico */
+        margin: 0 auto; /* Centraliza o gráfico horizontalmente */
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Adicione uma referência ao jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div class="container page-margin">
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="semNotaChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <div class="rounded-container">
+                <h4>Total vendido no período de @Model.StartDate.Value.ToString("dd/MM/yyyy") até @Model.EndDate.Value.ToString("dd/MM/yyyy")</h4>
+                <ul>
+                    <li>Quantidade de litros total sem nota: @Model.volumeTSNF</li> 
+                    <li>Quantidade de litros total com nota: @Model.volumeTCNF</li> 
+                </ul>
+            </div>
+            <div class="rounded-container">
+                <h4>Gasolina Comum</h4>
+                <ul>
+                    <li>Litragem sem Nota: @Model.volumeGCSNF</li>
+                    <li>Litragem com Nota: @Model.volumeGCCNF</li>
+                </ul>
+            </div>
+            <div class="rounded-container">
+                <h4>Gasolina Aditivada</h4>
+                <ul>
+                    <li>Litragem sem Nota: @Model.volumeGASNF</li>
+                    <li>Litragem com Nota: @Model.volumeGACNF</li>
+                </ul>
+            </div>
+            <div class="rounded-container">
+                <h4>Etanol comum</h4>
+                <ul>
+                    <li>Litragem sem Nota: @Model.volumeECSNF</li>
+                    <li>Litragem com Nota: @Model.volumeECCNF</li>
+                </ul>
+            </div>
+            <div class="rounded-container">
+                <h4>Diesel S10</h4>
+                <ul>
+                    <li>Litragem sem Nota: @Model.volumeDS10SNF</li>
+                    <li>Litragem com Nota: @Model.volumeDS10CNF</li>
+                </ul>
+            </div>
+            <div class="rounded-container">
+                <h4>Diesel S500</h4>
+                <ul>
+                    <li>Litragem sem Nota: @Model.volumeDS500SNF</li>
+                    <li>Litragem com Nota: @Model.volumeDS500CNF</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var semNotaData = {
+        labels: ['Com Nota', 'Sem Nota'],
+        datasets: [{
+            data: [@Model.Tipo0Count, @Model.Tipo9Count],
+            backgroundColor: ['red', 'blue']
+        }]
+    };
+
+    var semNotaCtx = document.getElementById('semNotaChart').getContext('2d');
+    var semNotaChart = new Chart(semNotaCtx, {
+        type: 'pie',
+        data: semNotaData
+    });
+
+    // Função para logout
+    document.getElementById('logoutButton').addEventListener('click', function () {
+        firebase.auth().signOut().then(function () {
+            window.location.href = '/Login'; // Redireciona para a página de login após o logout
+        }).catch(function (error) {
+            console.error("Erro ao sair: " + error);
+        });
+    });
+
+    // Função para alteração de senha
+    document.getElementById('changePasswordButton').addEventListener('click', function () {
+        var user = firebase.auth().currentUser;
+        if (user) {
+            var newPassword = prompt("Digite a nova senha:");
+            if (newPassword) {
+                user.updatePassword(newPassword).then(function () {
+                    alert("Senha alterada com sucesso! Faça login novamente.");
+                    firebase.auth().signOut().then(function () {
+                        window.location.href = '/Login'; // Redireciona para a página de login após a alteração de senha
+                    }).catch(function (error) {
+                        console.error("Erro ao sair após alteração de senha: " + error);
+                    });
+                }).catch(function (error) {
+                    alert("Erro ao alterar a senha: " + error.message);
+                });
+            }
+        }
+    });
+</script>
+
+
+<div id="loading-spinner" class="loading-spinner">
+    <!-- Coloque a animação de carregamento aqui, como uma imagem ou um ícone -->
+    <img src="loading.gif" alt="Carregando..." />
+</div>
+
+<script>
+    // Mostra a animação de carregamento quando a página é carregada
+    $('#loading-spinner').show();
+
+    $(document).ready(function () {
+        // Realize a solicitação AJAX no método OnGet
+        $.ajax({
+            type: "GET",
+            url: "/Index?handler=ObterDados", // Substitua 'Index' pelo nome da sua página Razor.
+            success: function (data) {
+                // Manipule os dados retornados da solicitação AJAX aqui
+                console.log(data);
+
+                // Oculta a animação de carregamento quando a solicitação AJAX é concluída
+                $('#loading-spinner').hide();
+            },
+            error: function (error) {
+                // Lida com erros, se houver
+                console.error(error);
+
+                // Oculta a animação de carregamento em caso de erro
+                $('#loading-spinner').hide();
+            }
+        });
+    });
+</script>

@@ -1,0 +1,87 @@
+﻿@page
+@model WebAppTestRazor.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+<div class="container text-center mt-5">
+    <div class="rounded p-4 bg-light" style="max-width: 400px; margin: 0 auto;">
+        <!--<h1 class="mb-3">Login com Firebase</h1>-->
+
+        @if (!Model.IsLoggedIn)
+        {
+            <div>
+                
+                <input id="email" type="email" class="form-control mb-3" placeholder="E-mail">
+                <input id="password" type="password" class="form-control mb-3" placeholder="Senha">
+                <button class="btn btn-primary" onclick="login()">Login</button>
+                
+            </div>
+        }
+        else
+        {
+            <p>Você está logado como <strong>@Model.UserEmail</strong>.</p>
+            <button class="btn btn-danger" onclick="logout()">Sair</button>
+        }
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.1/firebase-auth-compat.js"></script>
+
+<script>
+    // Configurações do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCld9nuZDT-VOdE-cTCUk6pvxGDDGeQeJw",
+        authDomain: "wesaupdatedata.firebaseapp.com",
+        databaseURL: "https://wesaupdatedata-default-rtdb.firebaseio.com",
+        projectId: "wesaupdatedata",
+        storageBucket: "wesaupdatedata.appspot.com",
+        messagingSenderId: "791021838823",
+        appId: "1:791021838823:web:0b7e908c525d1d27905d42",
+        measurementId: "G-FL3VY8GD12"
+    };
+
+    // Inicialize o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app)
+    // Função para lidar com o login
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            window.location.href = '/Index'; // Redireciona para Index.cshtml se o usuário estiver autenticado
+        }
+    });
+
+
+    function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                window.location.href = '/Index'; // Redireciona para Index.cshtml
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                alert(`Erro de autenticação: ${errorCode} - ${errorMessage}`);
+            });
+    }
+
+    // Função para sair
+    function logout() {
+        firebase.auth().signOut().then(() => {
+            location.reload();
+        }).catch((error) => {
+            console.log("Erro ao sair: " + error);
+        });
+    }
+    function redirectSignup() {
+        window.lotacion.href = '/Index.cshtml'
+    }
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            window.location.href = "/home.cshtml";
+        }
+    })
+</script>
